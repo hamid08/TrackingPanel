@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using TrackingPanel.Data.Context;
+using TrackingPanel.Data.Entites;
 using TrackingPanel.Models;
 
 namespace TrackingPanel.Controllers
@@ -87,7 +88,7 @@ namespace TrackingPanel.Controllers
 
         //    return d;
         //}
-    
+
         public static LatLong GetCenterPoint(List<LatLong> listLatLong)
 
         {
@@ -106,28 +107,81 @@ namespace TrackingPanel.Controllers
 
         }
 
+        public static Tracking GetCenterPoint(List<Tracking> listLatLong)
 
-        public IActionResult Index()
         {
 
-            List<Coordinate> coordinates = new List<Coordinate>
+            if (listLatLong == null || listLatLong.Count == 0)
+
+                throw new ArgumentException("List cannot be null or empty.");
+
+
+            double averageLatitude = listLatLong.Average(x => x.Latitude);
+
+            double averageLongitude = listLatLong.Average(x => x.Longitude);
+
+
+            return new Tracking {Latitude = averageLatitude,Longitude = averageLongitude };
+
+        }
+
+
+
+        private void calPoint()
+        {
+            List<Tracking> coordinates = new List<Tracking>
             {
-                 new Coordinate{ Latitude =35.585548,  Longitude =51.363681},
-                 new Coordinate{ Latitude =35.585579,  Longitude =51.363925},
-                 new Coordinate{ Latitude =35.585468,  Longitude =51.363846},
-                 new Coordinate{ Latitude =35.585501,  Longitude =51.363637},
-                 new Coordinate{ Latitude =35.585577,  Longitude = 51.363683},
-                 new Coordinate { Latitude = 35.585616,Longitude = 51.363436},
-                 new Coordinate { Latitude = 35.585614,Longitude = 51.363508},
+                 new Tracking{ Latitude =35.585548,  Longitude =51.363681,Speed = 0,InsertDate = DateTime.Now.AddSeconds(2)},
+                 new Tracking{ Latitude =35.585579,  Longitude =51.363925,Speed = 0,InsertDate = DateTime.Now.AddSeconds(3)},
+                 new Tracking{ Latitude =35.585468,  Longitude =51.363846,Speed = 20,InsertDate = DateTime.Now.AddSeconds(5)},
+                 new Tracking{ Latitude =35.585501,  Longitude =51.363637,Speed = 0,InsertDate = DateTime.Now.AddSeconds(10)},
+                 new Tracking{ Latitude =35.585577,  Longitude = 51.363683,Speed = 5,InsertDate = DateTime.Now.AddSeconds(16)},
+                 new Tracking { Latitude = 35.585616,Longitude = 51.363436,Speed = 5,InsertDate = DateTime.Now.AddSeconds(20)},
+                 new Tracking { Latitude = 35.585614,Longitude = 51.363508,Speed = 60,InsertDate = DateTime.Now.AddSeconds(29)},
 
             };
 
+            var t = coordinates.GroupBy(c => new
+            {
+                c.Speed,
+                c.InsertDate.Date,
+                c.InsertDate.Hour,
+                c.InsertDate.Minute
+            }).ToList();
 
-           var t = coordinates.Select(c => new Coordinate {
-            Latitude = Math.Round(c.Latitude, 4),
-            Longitude = Math.Round(c.Longitude, 4)
+            var pointList = new List<Tracking>();
 
-            }).GroupBy(c=> new {c.Latitude,c.Longitude }) .ToList();
+            foreach (var item in t)
+            {
+               var g = GetCenterPoint(item.ToList());
+                pointList.Add(g);
+            }
+
+        }
+
+
+        public IActionResult Index()
+        {
+           // calPoint();
+
+           // List<Coordinate> coordinates = new List<Coordinate>
+           // {
+           //      new Coordinate{ Latitude =35.585548,  Longitude =51.363681},
+           //      new Coordinate{ Latitude =35.585579,  Longitude =51.363925},
+           //      new Coordinate{ Latitude =35.585468,  Longitude =51.363846},
+           //      new Coordinate{ Latitude =35.585501,  Longitude =51.363637},
+           //      new Coordinate{ Latitude =35.585577,  Longitude = 51.363683},
+           //      new Coordinate { Latitude = 35.585616,Longitude = 51.363436},
+           //      new Coordinate { Latitude = 35.585614,Longitude = 51.363508},
+
+           // };
+
+
+           //var t = coordinates.Select(c => new Coordinate {
+           // Latitude = Math.Round(c.Latitude, 4),
+           // Longitude = Math.Round(c.Longitude, 4)
+
+           // }).GroupBy(c=> new {c.Latitude,c.Longitude }) .ToList();
 
             //List<LatLong> coordinates = new List<LatLong>
             //{
